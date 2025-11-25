@@ -29,9 +29,7 @@
                     <span class="count" id="todo-count">0</span>
                 </div>
 
-                <div class="column-content" id="todo-column">
-                    <!-- dynamic tasks will be injected here -->
-                </div>
+                <div class="column-content" id="todo-column"></div>
             </div>
 
             <!-- In Progress Column -->
@@ -41,9 +39,7 @@
                     <span class="count" id="progress-count">0</span>
                 </div>
 
-                <div class="column-content" id="progress-column">
-                    <!-- dynamic tasks will be injected here -->
-                </div>
+                <div class="column-content" id="progress-column"></div>
             </div>
 
             <!-- Done Column -->
@@ -53,13 +49,26 @@
                     <span class="count" id="done-count">0</span>
                 </div>
 
-                <div class="column-content" id="done-column">
-                    <!-- dynamic tasks will be injected here -->
-                </div>
+                <div class="column-content" id="done-column"></div>
             </div>
 
         </section>
     </main>
+
+
+    <!-- REUSABLE TASK TEMPLATE (Hidden) -->
+    <template id="task-template">
+        <div class="task" draggable="true">
+            <div class="task-header">
+                <span class="task-title">Untitled Task</span>
+                <div class="task-actions">
+                    <button class="edit-btn">Edit</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
+            </div>
+            <div class="task-content">Task details...</div>
+        </div>
+    </template>
 
     <script src="script.js"></script>
 </body>
