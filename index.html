@@ -4,33 +4,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canban Board</title>
+    <title>Kanban Board</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <main>
+
+        <!-- NAVBAR -->
         <nav>
-            <div class="left">Canban</div>
-            <div class="right"><button>New Task</button></div>
+            <div class="left">Kanban</div>
+            <div class="right">
+                <button id="new-task-btn">New Task</button>
+            </div>
         </nav>
+
+        <!-- BOARD SECTION -->
+        <section class="board">
+
+            <!-- To Do Column -->
+            <div class="task-column" data-status="todo">
+                <div class="column-header">
+                    <span class="title">To Do</span>
+                    <span class="count" id="todo-count">0</span>
+                </div>
+
+                <div class="column-content" id="todo-column">
+                    <!-- dynamic tasks will be injected here -->
+                </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="task-column" data-status="inprogress">
+                <div class="column-header">
+                    <span class="title">In Progress</span>
+                    <span class="count" id="progress-count">0</span>
+                </div>
+
+                <div class="column-content" id="progress-column">
+                    <!-- dynamic tasks will be injected here -->
+                </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="task-column" data-status="done">
+                <div class="column-header">
+                    <span class="title">Done</span>
+                    <span class="count" id="done-count">0</span>
+                </div>
+
+                <div class="column-content" id="done-column">
+                    <!-- dynamic tasks will be injected here -->
+                </div>
+            </div>
+
+        </section>
     </main>
-    <section class="board">
-        <div class="task-column">
-            <div class="column-header">To Do</div>
-            <div class="column-content">Count</div>
-        </div>
-        <div class="task-column">
-            <div class="column-header">In Progress</div>
-            <div class="column-content">Count</div>
-        </div>
-        <div class="task-column">
-            <div class="column-header">Done</div>
-            <div class="column-content">Count</div>
-            <div class="leftDone"></div>
-            <div class="rightDone"></div>
-        </div>
-    </section>
+
     <script src="script.js"></script>
 </body>
 

@@ -1,3 +1,6 @@
+/* ------------------------------ */
+/* RESET + BASE STYLES */
+/* ------------------------------ */
 * {
     margin: 0;
     padding: 0;
@@ -6,41 +9,64 @@
 
 html,
 body {
-    height: 100%;
     width: 100%;
+    height: 100%;
 }
 
 html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+
+    scroll-behavior: smooth;
 }
 
+/* ------------------------------ */
+/* DESIGN TOKENS */
+/* ------------------------------ */
 :root {
-    --bg-color: rgb(15, 2, 2);
-    --primary-text-color: rgb(235, 235, 235);
-    --bg-button-color: rgb(80, 73, 73);
+    /* Colors */
+    --color-bg: #0f0202;
+    --color-text-primary: #ebebeb;
+    --color-card-bg: #1a1313;
+    --color-button-bg: #514c4c;
+    --color-button-hover: #6d6767;
 
-    --nav-padding: 15px 30px;
-    --section-padding: 15px 30px;
+    /* Spacing */
+    --space-xs: 4px;
+    --space-s: 8px;
+    --space-m: 12px;
+    --space-l: 16px;
+    --space-xl: 24px;
+    --space-xxl: 32px;
 
-    --padding-s: 5px;
-    --padding-m: 10px;
-    --padding-l: 15px;
-    --padding-xl: 20px;
-    --padding-xxl: 30px;
+    /* Radius */
+    --radius-s: 6px;
+    --radius-m: 10px;
+    --radius-l: 14px;
+    --radius-xl: 20px;
 
-    --border-radius-s: 5px;
-    --border-radius-m: 10px;
-    --border-radius-l: 15px;
-    --border-radius-xl: 20px;
-    --border-radius-xxl: 25px;
-
+    /* Layout */
+    --nav-padding: var(--space-l) var(--space-xxl);
+    --section-padding: var(--space-l) var(--space-xxl);
 }
 
+/* ------------------------------ */
+/* GLOBAL */
+/* ------------------------------ */
 body {
-    background-color: var(--bg-color);
-    color: var(--primary-text-color);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
 }
 
+main {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ------------------------------ */
+/* NAVBAR */
+/* ------------------------------ */
 nav {
     padding: var(--nav-padding);
     display: flex;
@@ -49,17 +75,86 @@ nav {
 }
 
 nav button {
-    background-color: var(--bg-button-color);
+    background-color: var(--color-button-bg);
+    color: var(--color-text-primary);
+    padding: var(--space-m) var(--space-xl);
+    border-radius: var(--radius-m);
     border: none;
-    color: var(--primary-text-color);
-    outline: none;
-    padding: var(--padding-m) var(--padding-l);
     cursor: pointer;
-    border-radius: var(--border-radius-m);
+    outline: none;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-section {
+nav button:hover {
+    background-color: var(--color-button-hover);
+}
+
+nav button:active {
+    transform: scale(0.96);
+}
+
+/* ------------------------------ */
+/* BOARD SECTION */
+/* ------------------------------ */
+section.board {
+    flex-grow: 1;
+    height: 100%;
     padding: var(--section-padding);
     display: flex;
+    gap: var(--space-xl);
     justify-content: space-between;
+    align-items: flex-start;
+}
+
+/* Column Styling */
+.task-column {
+    flex: 1;
+    min-width: 280px;
+    background: var(--color-card-bg);
+    border-radius: var(--radius-l);
+    padding: var(--space-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-l);
+    height: 100%;
+}
+
+/* Column Header */
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-s);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.column-header .title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.column-header .count {
+    background: var(--color-button-bg);
+    padding: var(--space-xs) var(--space-m);
+    border-radius: var(--radius-s);
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Column Content */
+.column-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+    flex-grow: 1;
+}
+
+/* ------------------------------ */
+/* RESPONSIVE */
+/* ------------------------------ */
+@media (max-width: 768px) {
+    section.board {
+        flex-direction: column;
+        gap: var(--space-xl);
+    }
 }
