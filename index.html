@@ -2,75 +2,102 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Kanban Board</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
     <main>
-
-        <!-- NAVBAR -->
+        <!-- NAV -->
         <nav>
             <div class="left">Kanban</div>
             <div class="right">
-                <button id="new-task-btn">New Task</button>
+                <button id="new-task-btn" aria-haspopup="dialog" aria-controls="task-modal">New Task</button>
             </div>
         </nav>
 
-        <!-- BOARD SECTION -->
-        <section class="board">
-
-            <!-- To Do Column -->
-            <div class="task-column" data-status="todo">
+        <!-- BOARD -->
+        <section class="board" aria-label="Kanban board">
+            <div class="task-column" data-status="todo" aria-labelledby="todo-label">
                 <div class="column-header">
-                    <span class="title">To Do</span>
-                    <span class="count" id="todo-count">0</span>
+                    <div id="todo-label" class="title">To Do</div>
+                    <div class="count" id="todo-count">0</div>
                 </div>
-
-                <div class="column-content" id="todo-column"></div>
+                <div class="column-content" id="todo-column" tabindex="0" data-status="todo"></div>
             </div>
 
-            <!-- In Progress Column -->
-            <div class="task-column" data-status="inprogress">
+            <div class="task-column" data-status="inprogress" aria-labelledby="inprogress-label">
                 <div class="column-header">
-                    <span class="title">In Progress</span>
-                    <span class="count" id="progress-count">0</span>
+                    <div id="inprogress-label" class="title">In Progress</div>
+                    <div class="count" id="progress-count">0</div>
                 </div>
-
-                <div class="column-content" id="progress-column"></div>
+                <div class="column-content" id="progress-column" tabindex="0" data-status="inprogress"></div>
             </div>
 
-            <!-- Done Column -->
-            <div class="task-column" data-status="done">
+            <div class="task-column" data-status="done" aria-labelledby="done-label">
                 <div class="column-header">
-                    <span class="title">Done</span>
-                    <span class="count" id="done-count">0</span>
+                    <div id="done-label" class="title">Done</div>
+                    <div class="count" id="done-count">0</div>
                 </div>
-
-                <div class="column-content" id="done-column"></div>
+                <div class="column-content" id="done-column" tabindex="0" data-status="done"></div>
             </div>
-
         </section>
     </main>
 
-
-    <!-- REUSABLE TASK TEMPLATE (Hidden) -->
+    <!-- Task template -->
     <template id="task-template">
-        <div class="task" draggable="true">
-            <div class="task-header">
-                <span class="task-title">Untitled Task</span>
-                <div class="task-actions">
-                    <button class="edit-btn">Edit</button>
-                    <button class="delete-btn">Delete</button>
-                </div>
+        <div class="task" draggable="true" role="article">
+            <div class="left">
+                <div class="title">Untitled</div>
+                <div class="desc">Description</div>
             </div>
-            <div class="task-content">Task details...</div>
+            <div class="actions">
+                <button class="edit-btn" aria-label="Edit task">Edit</button>
+                <button class="delete-btn" aria-label="Delete task">Delete</button>
+            </div>
         </div>
     </template>
 
-    <script src="script.js"></script>
+    <!-- Modal (Add / Edit) -->
+    <div id="task-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title">
+        <div class="modal-panel" role="document">
+            <header class="modal-header">
+                <h2 id="modal-title">New Task</h2>
+                <button id="modal-close" aria-label="Close modal">✕</button>
+            </header>
+
+            <form id="task-form">
+                <label>
+                    Title
+                    <input id="task-title" name="title" type="text" required maxlength="120" autocomplete="off" />
+                </label>
+
+                <label>
+                    Description
+                    <textarea id="task-desc" name="description" rows="4" maxlength="1000"></textarea>
+                </label>
+
+                <label>
+                    Column
+                    <select id="task-status" name="status">
+                        <option value="todo">To Do</option>
+                        <option value="inprogress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </label>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-primary" id="modal-save">Save Task</button>
+                </div>
+            </form>
+        </div>
+        <div class="modal-backdrop" data-backdrop=""></div>
+    </div>
+
+    <script src="script.js" defer></script>
 </body>
 
 </html>

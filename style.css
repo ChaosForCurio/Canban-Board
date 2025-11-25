@@ -1,5 +1,5 @@
 /* ============================== */
-/*  RESET + BASE                 */
+/*  RESET + TOKENS               */
 /* ============================== */
 * {
     box-sizing: border-box;
@@ -9,32 +9,19 @@
 
 html,
 body {
-    width: 100%;
     height: 100%;
+    width: 100%;
 }
 
-html {
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
-    background: #0d0f11;
-    color: #e9eef8;
-}
-
-/* ============================== */
-/*  DESIGN TOKENS                */
-/* ============================== */
 :root {
     --bg: #0f1214;
     --panel: #141618;
     --muted: #9aa3ad;
     --accent: #4c7fff;
-    --accent-10: rgba(76, 127, 255, 0.10);
+    --accent-10: rgba(76, 127, 255, .10);
     --card: #1e2125;
-    --card-border: rgba(255, 255, 255, 0.04);
-
-    --shadow: 0 8px 30px rgba(2, 6, 12, 0.6);
+    --card-border: rgba(255, 255, 255, .04);
+    --shadow: 0 8px 30px rgba(2, 6, 12, .6);
 
     --s-xs: 6px;
     --s-s: 10px;
@@ -46,23 +33,33 @@ html {
     --r-lg: 18px;
     --nav-pad: 18px 28px;
     --page-pad: 22px;
+    --transition: .22s ease;
+    --max-width: 1200px;
 }
 
-/* ============================== */
-/*  LAYOUT - NAV & BOARD         */
-/* ============================== */
+html {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #0d0f11;
+    color: #e9eef8;
+}
+
+/* NAV */
 nav {
     padding: var(--nav-pad);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: transparent;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    width: 100%;
 }
 
 nav .left {
     font-weight: 700;
-    font-size: 1.15rem;
-    letter-spacing: 0.2px;
+    font-size: 1.1rem;
+    letter-spacing: .2px;
 }
 
 nav button {
@@ -77,23 +74,23 @@ nav button {
 
 nav button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
 }
 
-/* Board container */
+/* BOARD */
 section.board {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--page-pad);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    padding: var(--page-pad);
     height: calc(100dvh - 84px);
 }
 
-/* ============================== */
-/*  COLUMN CARD                  */
-/* ============================== */
+/* COLUMN */
 .task-column {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.14));
+    background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(0, 0, 0, .14));
     border-radius: var(--r-lg);
     padding: var(--s-xl);
     display: flex;
@@ -105,7 +102,6 @@ section.board {
     box-shadow: var(--shadow);
 }
 
-/* header */
 .column-header {
     display: flex;
     justify-content: space-between;
@@ -123,10 +119,10 @@ section.board {
     color: var(--muted);
     padding: 6px 10px;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: .9rem;
 }
 
-/* column drop zone (big & clear) */
+/* DROP ZONE */
 .column-content {
     flex: 1;
     display: flex;
@@ -134,29 +130,25 @@ section.board {
     gap: 12px;
     padding: 14px;
     min-height: 520px;
-    /* large drop area for easier dropping */
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.01);
-    border: 2px dashed rgba(255, 255, 255, 0.04);
-    transition: background .22s ease, border-color .22s ease, box-shadow .22s ease;
+    background: rgba(255, 255, 255, .01);
+    border: 2px dashed rgba(255, 255, 255, .04);
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
     overflow-y: auto;
 }
 
-/* drop hover highlight (animated) */
 .column-content.drop-hover {
     background: var(--accent-10);
     border-color: var(--accent);
-    box-shadow: 0 8px 40px rgba(76, 127, 255, 0.08);
+    box-shadow: 0 8px 40px rgba(76, 127, 255, .08);
 }
 
-/* ============================== */
-/*  TASK CARD                    */
-/* ============================== */
+/* TASK CARD */
 .task {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.06));
+    background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(0, 0, 0, .06));
     border-radius: 12px;
     padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, .03);
     cursor: grab;
     display: flex;
     justify-content: space-between;
@@ -166,15 +158,18 @@ section.board {
     user-select: none;
 }
 
-/* subtle lift when dragging */
-.task.dragging {
-    opacity: .85;
-    transform: scale(1.02);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+.task:active {
     cursor: grabbing;
+    transform: scale(1.02);
 }
 
-/* small content */
+.task.dragging {
+    opacity: .9;
+    transform: scale(1.02);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+}
+
+/* left content inside card */
 .task .left {
     flex: 1;
 }
@@ -186,11 +181,11 @@ section.board {
 
 .task .desc {
     color: var(--muted);
-    font-size: 0.92rem;
+    font-size: .92rem;
     line-height: 1.25;
 }
 
-/* actions */
+/* actions inside card */
 .task .actions {
     display: flex;
     gap: 8px;
@@ -200,31 +195,29 @@ section.board {
 
 .task .actions button {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, .04);
     color: var(--muted);
     padding: 6px 8px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: .85rem;
 }
 
 .task .actions button:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, .12);
     color: #fff;
 }
 
-/* task placeholder spacing when moving */
+/* placeholder used while dragging */
 .task-placeholder {
-    height: 64px;
+    height: 68px;
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px dashed rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, .02);
+    border: 1px dashed rgba(255, 255, 255, .04);
     transition: height .18s ease, background .18s ease;
 }
 
-/* ============================== */
-/*  SCROLLBAR (subtle)           */
-/* ============================== */
+/* SCROLLBAR */
 .column-content::-webkit-scrollbar {
     width: 8px;
 }
@@ -234,10 +227,123 @@ section.board {
     border-radius: 10px;
 }
 
-/* ============================== */
-/*  RESPONSIVE                   */
-/* ============================== */
-@media (max-width: 980px) {
+/* MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+
+.modal[aria-hidden="false"] {
+    display: flex;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .6);
+    backdrop-filter: blur(2px);
+}
+
+.modal-panel {
+    position: relative;
+    width: min(720px, 94vw);
+    background: linear-gradient(180deg, #0f1113, #151618);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .75);
+    border: 1px solid rgba(255, 255, 255, .03);
+    z-index: 50;
+}
+
+/* modal header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+#modal-close {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* form */
+#task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#task-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+#task-form input,
+#task-form textarea,
+#task-form select {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .04);
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #fff;
+    outline: none;
+    resize: vertical;
+}
+
+#task-form input:focus,
+#task-form textarea:focus,
+#task-form select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 6px 24px rgba(76, 127, 255, .06);
+}
+
+/* modal actions */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .04);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-width:980px) {
     section.board {
         grid-template-columns: 1fr;
         height: auto;

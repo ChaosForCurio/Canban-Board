@@ -1,208 +1,322 @@
-/* ==========================
-   Drag & Drop Kanban Script
-   - Uses your #task-template
-   - IDs: todo-column, progress-column, done-column
-   - Counts: todo-count, progress-count, done-count
-   ========================== */
+/* Kanban Drag & Drop + Modal Add/Edit + Counters + localStorage
+   Clean, well-commented, production-friendly
+*/
 
-const cols = {
-    todo: document.getElementById("todo-column"),
-    inprogress: document.getElementById("progress-column"),
-    done: document.getElementById("done-column")
-};
-const counts = {
-    todo: document.getElementById("todo-count"),
-    inprogress: document.getElementById("progress-count"),
-    done: document.getElementById("done-count")
-};
+(() => {
+    /* ---------- Selectors ---------- */
+    const newTaskBtn = document.getElementById('new-task-btn');
+    const taskTemplate = document.getElementById('task-template');
+    const columns = {
+        todo: document.getElementById('todo-column'),
+        inprogress: document.getElementById('progress-column'),
+        done: document.getElementById('done-column'),
+    };
+    const counts = {
+        todo: document.getElementById('todo-count'),
+        inprogress: document.getElementById('progress-count'),
+        done: document.getElementById('done-count'),
+    };
 
-const newTaskBtn = document.getElementById("new-task-btn");
-const template = document.getElementById("task-template");
+    /* Modal */
+    const modal = document.getElementById('task-modal');
+    const modalBackdrop = modal.querySelector('.modal-backdrop');
+    const modalClose = document.getElementById('modal-close');
+    const modalCancel = document.getElementById('modal-cancel');
+    const taskForm = document.getElementById('task-form');
+    const titleInput = document.getElementById('task-title');
+    const descInput = document.getElementById('task-desc');
+    const statusSelect = document.getElementById('task-status');
 
-let draggingEl = null;
-let placeholder = null;
+    /* drag state */
+    let dragged = null;
+    let placeholder = null;
+    let editingId = null;
 
-/* --------------------------
-   Helpers
-   -------------------------- */
-function updateCounts() {
-    counts.todo.textContent = cols.todo.children.length;
-    counts.inprogress.textContent = cols.inprogress.children.length;
-    counts.done.textContent = cols.done.children.length;
-}
+    /* storage key */
+    const STORAGE_KEY = 'kanban.tasks.v1';
 
-function createTask({ title = "Untitled", desc = "" } = {}) {
-    const clone = template.content.cloneNode(true);
-    const el = clone.querySelector(".task");
-    el.querySelector(".task-title").textContent = title;
-    el.querySelector(".task-content").textContent = desc;
-
-    // actions
-    const del = el.querySelector(".delete-btn");
-    const edit = el.querySelector(".edit-btn");
-
-    del.addEventListener("click", () => {
-        el.remove();
-        updateCounts();
-    });
-
-    edit.addEventListener("click", () => {
-        const t = prompt("Edit title:", el.querySelector(".task-title").textContent);
-        const d = prompt("Edit description:", el.querySelector(".task-content").textContent);
-        if (t != null) el.querySelector(".task-title").textContent = t;
-        if (d != null) el.querySelector(".task-content").textContent = d;
-    });
-
-    // make draggable
-    el.setAttribute("draggable", "true");
-    el.addEventListener("dragstart", onDragStart);
-    el.addEventListener("dragend", onDragEnd);
-
-    return el;
-}
-
-/* --------------------------
-   Drag logic
-   -------------------------- */
-function createPlaceholder(height = 64) {
-    const p = document.createElement("div");
-    p.className = "task-placeholder";
-    p.style.height = `${height}px`;
-    return p;
-}
-
-function getAfterElement(container, y) {
-    // returns element after which dropped (or null to append at end)
-    const draggableElements = [...container.querySelectorAll(".task:not(.dragging)")];
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > (closest.offset || -Infinity)) {
-            return { offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: -Infinity }).element || null;
-}
-
-/* Drag handlers */
-function onDragStart(e) {
-    draggingEl = e.currentTarget;
-    draggingEl.classList.add("dragging");
-
-    // create placeholder sized like the dragged element
-    const rect = draggingEl.getBoundingClientRect();
-    placeholder = createPlaceholder(rect.height);
-    // use dataTransfer for Firefox compatibility
-    e.dataTransfer.effectAllowed = "move";
-    try { e.dataTransfer.setData("text/plain", ""); } catch (err) { /* noop */ }
-    // slightly delay add to allow CSS to apply
-    requestAnimationFrame(() => {
-        draggingEl.style.display = "none";
-    });
-}
-
-function onDragEnd() {
-    if (draggingEl) {
-        draggingEl.style.display = "";
-        draggingEl.classList.remove("dragging");
-        draggingEl = null;
+    /* ---------- Utilities ---------- */
+    function uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     }
-    // remove any placeholders
-    document.querySelectorAll(".task-placeholder").forEach(p => p.remove());
-    // remove drop hover
-    document.querySelectorAll(".column-content.drop-hover").forEach(c => c.classList.remove("drop-hover"));
-    updateCounts();
-}
 
-/* Column dragover/drop */
-Object.values(cols).forEach(col => {
-    col.addEventListener("dragenter", e => {
+    function saveTasksToStorage() {
+        const all = [];
+        Object.keys(columns).forEach(key => {
+            const col = columns[key];
+            Array.from(col.children).forEach(el => {
+                all.push({
+                    id: el.dataset.id,
+                    title: el.querySelector('.title').textContent,
+                    description: el.querySelector('.desc').textContent,
+                    status: key,
+                });
+            });
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    }
+
+    function loadTasksFromStorage() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        try {
+            const arr = JSON.parse(raw);
+            arr.forEach(obj => {
+                const el = buildTaskElement(obj);
+                columns[obj.status]?.appendChild(el);
+            });
+            updateCounts();
+        } catch (e) {
+            console.warn('Failed to parse stored tasks', e);
+        }
+    }
+
+    /* create element from template and populate */
+    function buildTaskElement({ id = null, title = 'Untitled', description = '', status = 'todo' } = {}) {
+        const clone = taskTemplate.content.cloneNode(true);
+        const taskEl = clone.querySelector('.task');
+        const titleEl = clone.querySelector('.title');
+        const descEl = clone.querySelector('.desc');
+        const editBtn = clone.querySelector('.edit-btn');
+        const deleteBtn = clone.querySelector('.delete-btn');
+
+        taskEl.dataset.id = id || uid();
+        titleEl.textContent = title;
+        descEl.textContent = description;
+
+        // attach handlers
+        taskEl.addEventListener('dragstart', onDragStart);
+        taskEl.addEventListener('dragend', onDragEnd);
+
+        editBtn.addEventListener('click', () => openEditModal(taskEl));
+        deleteBtn.addEventListener('click', () => {
+            taskEl.remove();
+            updateCounts();
+            saveTasksToStorage();
+        });
+
+        return taskEl;
+    }
+
+    /* ---------- Modal logic (add/edit) ---------- */
+    function openModal() {
+        editingId = null;
+        taskForm.reset();
+        modal.setAttribute('aria-hidden', 'false');
+        titleInput.focus();
+    }
+
+    function openEditModal(taskEl) {
+        editingId = taskEl.dataset.id;
+        titleInput.value = taskEl.querySelector('.title').textContent;
+        descInput.value = taskEl.querySelector('.desc').textContent;
+        statusSelect.value = findStatusForTask(taskEl);
+        modal.querySelector('#modal-title').textContent = 'Edit Task';
+        modal.setAttribute('aria-hidden', 'false');
+        titleInput.focus();
+    }
+
+    function closeModal() {
+        editingId = null;
+        modal.querySelector('#modal-title').textContent = 'New Task';
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function findStatusForTask(el) {
+        if (!el) return 'todo';
+        const parent = el.closest('.column-content');
+        return parent?.dataset.status || 'todo';
+    }
+
+    /* submit handler */
+    taskForm.addEventListener('submit', e => {
         e.preventDefault();
-        col.classList.add("drop-hover");
-    });
+        const title = titleInput.value.trim();
+        const desc = descInput.value.trim();
+        const status = statusSelect.value;
 
-    col.addEventListener("dragover", e => {
-        e.preventDefault();
-        const y = e.clientY;
-        const afterEl = getAfterElement(col, y);
-
-        // ensure placeholder exists in right place
-        if (!placeholder.parentElement || placeholder.parentElement !== col) {
-            // remove from other places
-            document.querySelectorAll(".task-placeholder").forEach(p => p.remove());
-            col.appendChild(placeholder);
+        if (!title) {
+            titleInput.focus();
+            return;
         }
 
-        if (afterEl == null) {
-            col.appendChild(placeholder);
+        if (editingId) {
+            // find existing
+            const existing = document.querySelector(`.task[data-id="${editingId}"]`);
+            if (existing) {
+                existing.querySelector('.title').textContent = title;
+                existing.querySelector('.desc').textContent = desc;
+                // move column if status changed
+                if (findStatusForTask(existing) !== status) {
+                    columns[status].appendChild(existing);
+                }
+            }
         } else {
-            col.insertBefore(placeholder, afterEl);
+            const el = buildTaskElement({ title, description: desc, status });
+            columns[status].appendChild(el);
         }
+
+        updateCounts();
+        saveTasksToStorage();
+        closeModal();
     });
 
-    col.addEventListener("dragleave", e => {
-        // if leaving to outside the column (not into a child), remove hover
-        const rect = col.getBoundingClientRect();
+    /* modal close handlers */
+    newTaskBtn.addEventListener('click', () => {
+        openModal();
+    });
+    modalClose.addEventListener('click', closeModal);
+    modalCancel?.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeModal();
+    });
+
+    /* ---------- Counters ---------- */
+    function updateCounts() {
+        counts.todo.textContent = columns.todo.children.length;
+        counts.inprogress.textContent = columns.inprogress.children.length;
+        counts.done.textContent = columns.done.children.length;
+    }
+
+    /* ---------- Drag & Drop ---------- */
+    function createPlaceholder(height = 68) {
+        const ph = document.createElement('div');
+        ph.className = 'task-placeholder';
+        ph.style.height = `${height}px`;
+        return ph;
+    }
+
+    function onDragStart(e) {
+        dragged = this;
+        this.classList.add('dragging');
+
+        // create placeholder to show where the card will land
+        placeholder = createPlaceholder(this.offsetHeight);
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', this.dataset.id); } catch (err) { /* IE */ }
+        // small timeout to ensure styles apply
+        setTimeout(() => this.style.display = 'none', 0);
+    }
+
+    function onDragEnd() {
+        if (dragged) {
+            dragged.style.display = '';
+            dragged.classList.remove('dragging');
+        }
+        removePlaceholders();
+        dragged = null;
+        placeholder = null;
+        // cleanup hover classes
+        Object.values(columns).forEach(col => col.classList.remove('drop-hover'));
+        updateCounts();
+        saveTasksToStorage();
+    }
+
+    function removePlaceholders() {
+        document.querySelectorAll('.task-placeholder').forEach(p => p.remove());
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault(); // allow drop
+        const column = this;
+        column.classList.add('drop-hover');
+
+        // find child to insert before
+        const afterEl = getDragAfterElement(column, e.clientY);
+        removePlaceholders();
+        if (afterEl == null) {
+            column.appendChild(placeholder);
+        } else {
+            column.insertBefore(placeholder, afterEl);
+        }
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragLeave(e) {
+        const column = this;
+        // when leaving to a child element, don't remove yet — use enter/over to manage
+        // if leaving completely remove hover and placeholders
+        const rect = column.getBoundingClientRect();
         if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-            col.classList.remove("drop-hover");
-            // remove placeholder if moving out
-            // but leave placeholder if still dragging inside other column
+            column.classList.remove('drop-hover');
+            removePlaceholders();
         }
-    });
+    }
 
-    col.addEventListener("drop", e => {
+    function handleDrop(e) {
         e.preventDefault();
-        if (!draggingEl) return;
-        // place dragging element where placeholder is (or append)
-        if (placeholder && placeholder.parentElement === col) {
-            col.insertBefore(draggingEl, placeholder);
+        const column = this;
+        column.classList.remove('drop-hover');
+
+        // If placeholder present, insert before placeholder, else append
+        if (placeholder && placeholder.parentElement === column) {
+            column.insertBefore(dragged, placeholder);
             placeholder.remove();
         } else {
-            col.appendChild(draggingEl);
+            column.appendChild(dragged);
         }
-        col.classList.remove("drop-hover");
-        draggingEl.style.display = "";
-        draggingEl.classList.remove("dragging");
-        draggingEl = null;
+
+        dragged.style.display = '';
+        dragged.classList.remove('dragging');
+
         updateCounts();
+        saveTasksToStorage();
+    }
+
+    /* Utility: find element after pointer */
+    function getDragAfterElement(container, y) {
+        const elements = [...container.querySelectorAll('.task:not(.dragging)')];
+
+        return elements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            // offset negative means above midpoint -> closer
+            if (offset < 0 && offset > closest.offset) {
+                return { offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element || null;
+    }
+
+    /* attach drag listeners to columns */
+    Object.values(columns).forEach(col => {
+        col.addEventListener('dragover', handleDragOver);
+        col.addEventListener('dragenter', (e) => { e.preventDefault(); col.classList.add('drop-hover'); });
+        col.addEventListener('dragleave', handleDragLeave);
+        col.addEventListener('drop', handleDrop);
     });
-});
 
-/* ===========================
-   New Task button
-   =========================== */
-newTaskBtn.addEventListener("click", () => {
-    const title = prompt("Task title:");
-    if (!title || title.trim() === "") return;
-    const desc = prompt("Description (optional):") || "";
-    const el = createTask({ title: title.trim(), desc: desc.trim() });
-    cols.todo.appendChild(el);
-    updateCounts();
-});
-
-/* ===========================
-   Initialize: attach listeners to existing tasks (if any) + counts
-   =========================== */
-function initExistingTasks() {
-    // if tasks are present at load (not from template), attach handlers
-    document.querySelectorAll(".task").forEach(t => {
-        if (!t.hasAttribute("draggable")) {
-            t.setAttribute("draggable", "true");
-            t.addEventListener("dragstart", onDragStart);
-            t.addEventListener("dragend", onDragEnd);
-            const del = t.querySelector(".delete-btn");
-            if (del) del.addEventListener("click", () => { t.remove(); updateCounts(); });
-            const edit = t.querySelector(".edit-btn");
-            if (edit) edit.addEventListener("click", () => {
-                const newT = prompt("Edit title:", t.querySelector(".task-title").textContent);
-                const newD = prompt("Edit desc:", t.querySelector(".task-content").textContent);
-                if (newT != null) t.querySelector(".task-title").textContent = newT;
-                if (newD != null) t.querySelector(".task-content").textContent = newD;
-            });
+    /* ---------- Initialization ---------- */
+    // If no saved tasks, seed with a friendly sample
+    function seedIfEmpty() {
+        if (!localStorage.getItem(STORAGE_KEY)) {
+            const sample = [
+                { id: uid(), title: 'Plan homepage', description: 'Sketch layout & gather assets', status: 'todo' },
+                { id: uid(), title: 'Integrate auth', description: 'Add sign-in API', status: 'inprogress' },
+                { id: uid(), title: 'Ship v1', description: 'Prepare release notes', status: 'done' },
+            ];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
         }
-    });
-    updateCounts();
-}
+    }
 
-initExistingTasks();
+    // Load tasks
+    seedIfEmpty();
+    loadTasksFromStorage();
+
+    // When new task button clicked, prepare modal for new
+    newTaskBtn.addEventListener('click', () => {
+        modal.querySelector('#modal-title').textContent = 'New Task';
+        taskForm.reset();
+        statusSelect.value = 'todo';
+        modal.setAttribute('aria-hidden', 'false');
+        titleInput.focus();
+    });
+
+    // update counts on page load
+    updateCounts();
+
+    // tidy up on unload
+    window.addEventListener('beforeunload', saveTasksToStorage);
+})();
