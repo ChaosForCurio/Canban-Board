@@ -17,6 +17,7 @@ html {
 :root {
     --bg-color: rgb(15, 2, 2);
     --primary-text-color: rgb(235, 235, 235);
+    --bg-button-color: rgb(80, 73, 73);
 
     --nav-padding: 15px 30px;
     --section-padding: 15px 30px;
@@ -27,9 +28,32 @@ html {
     --padding-xl: 20px;
     --padding-xxl: 30px;
 
+    --border-radius-s: 5px;
+    --border-radius-m: 10px;
+    --border-radius-l: 15px;
+    --border-radius-xl: 20px;
+    --border-radius-xxl: 25px;
+
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--primary-text-color);
+}
+
+nav {
+    padding: var(--nav-padding);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav button {
+    background-color: var(--bg-button-color);
+    border: none;
+    color: var(--primary-text-color);
+    outline: none;
+    padding: var(--padding-m) var(--padding-l);
+    cursor: pointer;
+    border-radius: var(--border-radius-m);
 }
